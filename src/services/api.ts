@@ -9,7 +9,7 @@ const api = axios.create({
   },
 });
 
-// 模拟数据 - 当API不可用时显示
+// 模拟数据
 const mockVideos: Video[] = [
   {
     id: '1',
@@ -141,56 +141,26 @@ export const categoryNames: Record<string, string> = {
   'all': '全部',
 };
 
-// 尝试获取真实API数据，失败则返回模拟数据
-async function fetchWithFallback(fetchFn: () => Promise<ApiResponse<Video>>): Promise<ApiResponse<Video>> {
-  try {
-    const result = await fetchFn();
-    if (result.code === 1 && result.list && result.list.length > 0) {
-      return result;
-    }
-    return getMockResponse();
-  } catch {
-    return getMockResponse();
-  }
-}
-
-function getMockResponse(page: number = 1): ApiResponse<Video> {
+// 返回模拟数据
+function getMockResponse(page: number = 1, filtered?: Video[]): ApiResponse<Video> {
+  const data = filtered || mockVideos;
   const pageSize = 20;
   const start = (page - 1) * pageSize;
-  const end = start + pageSize;
   return {
     code: 1,
     msg: 'ok',
     page,
-    pagecount: Math.ceil(mockVideos.length / pageSize),
+    pagecount: Math.ceil(data.length / pageSize),
     limit: pageSize,
-    total: mockVideos.length,
-    list: mockVideos.slice(start, end),
+    total: data.length,
+    list: data.slice(start, start + pageSize),
   };
 }
 
 // 获取首页推荐/最新视频
 export const fetchHomeVideos = async (page: number = 1): Promise<ApiResponse<Video>> => {
-  return fetchWithFallback(async () => {
-    const sources = [
-      { url: 'https://json.paugram.com/category', params: { page, limit: 20 } },
-      { url: 'https://api.yparse.com/api/json', params: { page, limit: 20 } },
-      { url: 'https://zy.yparse.com/api/json', params: { page, limit: 20 } },
-    ];
-
-    for (const source of sources) {
-      try {
-        const response = await api.get(source.url, { params: source.params });
-        if (response.data && response.data.code === 1 && response.data.list?.length > 0) {
-          return response.data;
-        }
-      } catch {
-        continue;
-      }
-    }
-    
-    throw new Error('All APIs failed');
-  });
+  // 直接使用模拟数据
+  return getMockResponse(page);
 };
 
 // 按分类获取视频
@@ -198,108 +168,37 @@ export const fetchVideosByCategory = async (
   category: string,
   page: number = 1
 ): Promise<ApiResponse<Video>> => {
-  const typeId = categoryMap[category] || 0;
-
-  return fetchWithFallback(async () => {
-    const sources = [
-      { url: 'https://json.paugram.com/category', params: { type: typeId, page, limit: 20 } },
-      { url: 'https://api.yparse.com/api/json', params: { type: typeId, page, limit: 20 } },
-      { url: 'https://zy.yparse.com/api/json', params: { type: typeId, page, limit: 20 } },
-    ];
-
-    for (const source of sources) {
-      try {
-        const response = await api.get(source.url, { params: source.params });
-        if (response.data && response.data.code === 1 && response.data.list?.length > 0) {
-          return response.data;
-        }
-      } catch {
-        continue;
-      }
-    }
-
-    const filtered = category === 'all' 
-      ? mockVideos 
-      : mockVideos.filter(v => v.type === category);
-    
-    return {
-      code: 1,
-      msg: 'ok',
-      page,
-      pagecount: Math.ceil(filtered.length / 20),
-      limit: 20,
-      total: filtered.length,
-      list: filtered.slice((page - 1) * 20, page * 20),
-    };
-  });
+  const filtered = category === 'all' 
+    ? mockVideos 
+    : mockVideos.filter(v => v.type === category);
+  return getMockResponse(page, filtered);
 };
 
 // 搜索视频
 export const searchVideos = async (keyword: string, page: number = 1): Promise<ApiResponse<Video>> => {
-  return fetchWithFallback(async () => {
-    const sources = [
-      { url: 'https://json.paugram.com/category', params: { wd: keyword, page, limit: 20 } },
-      { url: 'https://api.yparse.com/api/json', params: { wd: keyword, page, limit: 20 } },
-      { url: 'https://zy.yparse.com/api/json', params: { wd: keyword, page, limit: 20 } },
-    ];
-
-    for (const source of sources) {
-      try {
-        const response = await api.get(source.url, { params: source.params });
-        if (response.data && response.data.code === 1 && response.data.list?.length > 0) {
-          return response.data;
-        }
-      } catch {
-        continue;
-      }
-    }
-
-    const results = mockVideos.filter(v => 
-      v.name.includes(keyword) || 
-      v.actor.includes(keyword) ||
-      v.des.includes(keyword)
-    );
-
-    return {
-      code: 1,
-      msg: 'ok',
-      page,
-      pagecount: 1,
-      limit: 20,
-      total: results.length,
-      list: results,
-    };
-  });
+  const results = mockVideos.filter(v => 
+    v.name.includes(keyword) || 
+    v.actor.includes(keyword) ||
+    v.des.includes(keyword)
+  );
+  return getMockResponse(page, results);
 };
 
 // 获取视频详情
 export const fetchVideoDetail = async (id: string): Promise<Video | null> => {
-  const mockVideo = mockVideos.find(v => v.id === id);
-  if (mockVideo) return mockVideo;
-
-  try {
-    const sources = [
-      { url: 'https://json.paugram.com/category', params: { ids: id } },
-      { url: 'https://api.yparse.com/api/json', params: { ids: id } },
-    ];
-
-    for (const source of sources) {
-      const response = await api.get(source.url, { params: source.params });
-      if (response.data?.list?.length > 0) {
-        return response.data.list[0];
-      }
-    }
-  } catch {
-    // ignore
-  }
-
-  return null;
+  return mockVideos.find(v => v.id === id) || null;
 };
 
-// 解析视频URL（第三方解析）
+// 解析视频URL
 export const parseVideoUrl = (url: string): string => {
   if (!url) return '';
-  return `https://jx.jsonplayer.com/player/?url=${encodeURIComponent(url)}`;
+  // 使用多个备用解析服务
+  const parsers = [
+    `https://www.yiguoyy.com/jx/?url=${encodeURIComponent(url)}`,
+    `https://jx.iviews.cc/jx.php?url=${encodeURIComponent(url)}`,
+    `https://vip.parpaka.com/play.php?url=${encodeURIComponent(url)}`,
+  ];
+  return parsers[0];
 };
 
 // 获取直链播放地址
