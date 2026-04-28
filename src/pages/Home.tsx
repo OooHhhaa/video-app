@@ -18,7 +18,7 @@ export default function Home() {
   }, [category]);
 
   const loadVideos = async (reset: boolean = false) => {
-    if (loading) return;
+    if (!reset && loading) return;
     
     const currentPage = reset ? 1 : page;
     
