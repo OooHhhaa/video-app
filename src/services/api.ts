@@ -141,14 +141,6 @@ export const categoryNames: Record<string, string> = {
   'all': '全部',
 };
 
-// 分类中文映射
-const categoryTypeMap: Record<string, string> = {
-  'movie': 'movie',
-  'tv': 'tv',
-  'anime': 'anime',
-  'variety': 'variety',
-};
-
 // 尝试获取真实API数据，失败则返回模拟数据
 async function fetchWithFallback(fetchFn: () => Promise<ApiResponse<Video>>): Promise<ApiResponse<Video>> {
   try {
@@ -156,10 +148,8 @@ async function fetchWithFallback(fetchFn: () => Promise<ApiResponse<Video>>): Pr
     if (result.code === 1 && result.list && result.list.length > 0) {
       return result;
     }
-    // API返回空数据，使用模拟数据
     return getMockResponse();
   } catch {
-    // API请求失败，使用模拟数据
     return getMockResponse();
   }
 }
@@ -182,7 +172,6 @@ function getMockResponse(page: number = 1): ApiResponse<Video> {
 // 获取首页推荐/最新视频
 export const fetchHomeVideos = async (page: number = 1): Promise<ApiResponse<Video>> => {
   return fetchWithFallback(async () => {
-    // 尝试多个API源
     const sources = [
       { url: 'https://json.paugram.com/category', params: { page, limit: 20 } },
       { url: 'https://api.yparse.com/api/json', params: { page, limit: 20 } },
@@ -229,7 +218,6 @@ export const fetchVideosByCategory = async (
       }
     }
 
-    // API失败，返回按分类筛选的模拟数据
     const filtered = category === 'all' 
       ? mockVideos 
       : mockVideos.filter(v => v.type === category);
@@ -266,7 +254,6 @@ export const searchVideos = async (keyword: string, page: number = 1): Promise<A
       }
     }
 
-    // API失败，返回搜索模拟数据
     const results = mockVideos.filter(v => 
       v.name.includes(keyword) || 
       v.actor.includes(keyword) ||
@@ -287,7 +274,6 @@ export const searchVideos = async (keyword: string, page: number = 1): Promise<A
 
 // 获取视频详情
 export const fetchVideoDetail = async (id: string): Promise<Video | null> => {
-  // 先尝试从模拟数据获取
   const mockVideo = mockVideos.find(v => v.id === id);
   if (mockVideo) return mockVideo;
 
@@ -313,7 +299,6 @@ export const fetchVideoDetail = async (id: string): Promise<Video | null> => {
 // 解析视频URL（第三方解析）
 export const parseVideoUrl = (url: string): string => {
   if (!url) return '';
-  // 使用第三方解析服务
   return `https://jx.jsonplayer.com/player/?url=${encodeURIComponent(url)}`;
 };
 
