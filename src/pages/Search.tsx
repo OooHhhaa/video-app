@@ -57,9 +57,10 @@ export default function SearchPage() {
     localStorage.removeItem(STORAGE_KEY);
   };
 
-  const handleVideoClick = (video: Video) => {
-    navigate(`/detail/${video.id}`);
-  };
+  // handleVideoClick unused but kept for future use
+  // const handleVideoClick = (video: Video) => {
+  //   navigate(`/detail/${video.id}`);
+  // };
 
   return (
     <div className="h-full flex flex-col pt-12">

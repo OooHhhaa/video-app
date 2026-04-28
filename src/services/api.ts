@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { Video, ApiResponse, Category } from '../types';
+import type { Video, ApiResponse } from '../types';
 
 // API基础URL - 使用多个备用源
 const API_SOURCES = [

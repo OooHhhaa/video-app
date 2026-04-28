@@ -4,7 +4,7 @@ import type { Video } from '../types';
 import { parseVideoUrl } from '../services/api';
 
 export default function Player() {
-  const { id } = useParams<{ id: string }>();
+  const { id: _id } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const videoRef = useRef<HTMLVideoElement>(null);
