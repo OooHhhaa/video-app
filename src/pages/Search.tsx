@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import SearchBar from '../components/SearchBar';
 import VideoCard from '../components/VideoCard';
 import Loading from '../components/Loading';
@@ -10,7 +9,6 @@ import type { Video } from '../types';
 const STORAGE_KEY = 'video_search_history';
 
 export default function SearchPage() {
-  const navigate = useNavigate();
   const [keyword, setKeyword] = useState('');
   const [videos, setVideos] = useState<Video[]>([]);
   const [loading, setLoading] = useState(false);
